@@ -43,6 +43,8 @@ from monai.inferers import sliding_window_inference
 from monai.data import CacheDataset, DataLoader, Dataset, decollate_batch
 from monai.apps import download_and_extract
 
+from monai.transforms import MapTransform
+
 from models.layers import ConcreteDropout
 from models.layers import LP_BNN_Conv3d, LP_BNN_ConvTranspose3d
 from models.layers import Rank1_BNN_Conv3d, Rank1_BNN_ConvTranspose3d
@@ -177,8 +179,9 @@ def train(args, log_dir):
                 batch_data["label"].to(device),
             )
             optimizer.zero_grad()
+            
             outputs = model(inputs)
-
+            import pdb ; pdb.set_trace()
             reg = torch.zeros(1).to(device)
             for module in filter(lambda x: isinstance(x, ConcreteDropout), model.modules()):
                 reg += module.regularization
@@ -195,8 +198,6 @@ def train(args, log_dir):
                 loss = loss_function(outputs, labels.squeeze().long())
             else:
                 loss = loss_function(outputs, labels) + reg
-
-
 
             loss.backward()
             optimizer.step()
@@ -321,6 +322,21 @@ def plot_examples(model, log_dir, val_loader, device, num_examples=3, name='val'
             plt.clf()
             if i == (num_examples-1):
                 break
+
+
+
+
+class AddFilenameMetaDict(MapTransform):
+    """
+    Adds 'image_meta_dict' (or similar) manually before LoadImaged.
+    """
+    def __call__(self, data):
+        for key in self.keys:
+            data[f"{key}_meta_dict"] = {
+                "filename_or_obj": [data[key]],
+            }
+        return data
+    
 def get_transforms(args):
     # Setup transforms for training and validation
     #   Here we use several transforms to augment the dataset:
@@ -394,6 +410,7 @@ def get_transforms(args):
     )
     val_org_transforms = Compose(
         [
+            AddFilenameMetaDict(keys=["image"]),
             LoadImaged(keys=["image", "label"]),
             EnsureChannelFirstd(keys=["image", "label"]),
             Orientationd(keys=["image"], axcodes="RAS"),

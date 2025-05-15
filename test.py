@@ -147,8 +147,10 @@ def test(test_set, args):
     inference_times, no_sample_dsc = [], []
     with Parallel(n_jobs=6) as parallel_backend:
         with torch.no_grad():
+    
             for test_data in test_org_loader:
-                image_name = os.path.basename(test_data['image_meta_dict']['filename_or_obj'][0])
+               # import pdb; pdb.set_trace()
+                image_name = os.path.basename(test_data['image_meta_dict']['filename_or_obj'][0][0])
                 print(image_name)
                 test_inputs = test_data["image"].to(device)
                 start_time = time.time()
@@ -184,7 +186,7 @@ def test(test_set, args):
         dsc, dsc_aac, ndsc, f1, ndsc_aac, inference_times, total_unc, names = [], [], [], [], [], [], [], []
         with torch.no_grad():
             for i, test_data in enumerate(test_org_loader):
-                image_name = os.path.basename(test_data['image_meta_dict']['filename_or_obj'][0])
+                image_name = os.path.basename(test_data['image_meta_dict']['filename_or_obj'][0][0])
                 print(image_name)
                 inputs = test_data["image"].to(device)
                 all_outputs = []
@@ -221,7 +223,7 @@ def test(test_set, args):
                 plt.figure("check", (18, 12))
                 plt.subplot(2, 3, 1)
                 plt.title("Input image")
-                test_image=nib.load(test_data['image_meta_dict']['filename_or_obj'][0]).get_fdata()
+                test_image=nib.load(test_data['image_meta_dict']['filename_or_obj'][0][0]).get_fdata()
                 test_image = (test_image-np.min(test_image))/(np.max(test_image)-np.min(test_image))
                 plt.imshow(test_image[:, :, slice_num], cmap="gray")
                 plt.subplot(2, 3, 2)

@@ -141,6 +141,7 @@ def train(args, log_dir):
         epoch_loss_values.append(epoch_loss)
         logging.info(f"SWA epoch {epoch + 1} average loss: {epoch_loss:.4f}")
         model.collect_model(base_model)
+        print("Hello")
 
         if (epoch + 1) % val_interval == 0:
             model.set_swa()
@@ -177,7 +178,7 @@ def train(args, log_dir):
                 if metric > best_metric:
                     best_metric = metric
                     best_metric_epoch = epoch + 1
-                torch.save(model.state_dict(), os.path.join(log_dir, "best_model.pth"))
+                    torch.save(model.state_dict(), os.path.join(log_dir, "best_model.pth"))
                 logging.info("saved new best metric model")
                 logging.info(
                     f"current epoch: {epoch + 1} current mean SWA dice: {metric:.4f}"

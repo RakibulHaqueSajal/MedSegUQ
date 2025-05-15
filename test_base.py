@@ -16,6 +16,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from scipy.stats import pearsonr
 from warnings import filterwarnings
+from torchinfo import summary
 filterwarnings(action='ignore', message='In the future `np.bool` will be defined as the corresponding NumPy scalar.')
 
 from monai.handlers.utils import from_engine
@@ -46,6 +47,7 @@ from train import plot_examples, get_file_sets, get_transforms
 def test(test_set, args):
     # create output dict
     out_dir = os.path.dirname(config_path) + '/'
+    print(out_dir)
     output = {'config':args, 'metrics':{}}
     output_name = test_set + '_' + 'base'
 
@@ -112,20 +114,22 @@ def test(test_set, args):
     model_module = importlib.import_module('.%s' % args.model_name, 'models')
     model = model_module.Model(args).to(device)
     if args.model_name != 'ensemble' and args.model_name != 'multi_swag':
-        model.load_state_dict(torch.load(args.best_model_path,map_location=device))
+        model.load_state_dict(torch.load(args.best_model_path,map_location=device,weights_only=True))
     print("%s model's previous weights loaded." % args.model_name)
     # summary(model, [(1,96,96,96)])
     if args.model_name == 'swag':
         model.subspace.rank = torch.tensor(0)
     model.eval()
+    summary(model,input_size=(1,1,96,96,96))
+
 
     # Test prediction accuracy (no dropout, avg of ensembles)
     inference_times, no_sample_dsc, total_unc, ns_dsc_aac, names = [], [], [], [], []
     with Parallel(n_jobs=6) as parallel_backend:
         with torch.no_grad():
             for test_data in test_org_loader:
-                test_image=nib.load(test_data['image_meta_dict']['filename_or_obj'][0]).get_fdata()
-                image_name = os.path.basename(test_data['image_meta_dict']['filename_or_obj'][0])
+                test_image=nib.load(test_data['image_meta_dict']['filename_or_obj'][0][0]).get_fdata()
+                image_name = os.path.basename(test_data['image_meta_dict']['filename_or_obj'][0][0])
                 print(image_name)
                 names.append(image_name.replace('.nii.gz',''))
                 test_inputs = test_data["image"].to(device)
@@ -134,6 +138,7 @@ def test(test_set, args):
                 inference_times.append(time.time()-start_time)
                 test_data = [post_transforms1(i) for i in decollate_batch(test_data)]
                 test_pred, test_labels = from_engine(["pred", "label"])(test_data)
+                print(test_pred[0].shape)
                 probs = torch.nn.functional.softmax(test_pred[0], dim=0).cpu().numpy()
                 unc_map = 1-np.max(probs, axis=0)
                 test_data = post_transforms2(test_data)
@@ -207,6 +212,7 @@ if __name__ == "__main__":
     parser.add_argument('-t', '--test_set', help='train, val, or test', default='test')
     parser.add_argument('-d', '--device', default='cuda:0')
     arg = parser.parse_args()
+    print(arg.config)
     config_path = arg.config
     args = munch.munchify(yaml.safe_load(open(config_path)))
     args.update(arg.__dict__)

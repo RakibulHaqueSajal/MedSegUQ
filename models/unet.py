@@ -22,7 +22,7 @@ from models.blocks import Convolution, ResidualUnit, ADN
 
 from monai.networks.layers.factories import Act, Norm
 from monai.networks.layers.simplelayers import SkipConnection
-from monai.utils import alias, export
+#from monai.utils import alias, export
 from monai.networks.layers.convutils import same_padding, stride_minus_kernel_padding
 from monai.networks.layers.factories import Conv
  
@@ -30,8 +30,8 @@ from monai.networks.layers.factories import Conv
 __all__ = ["UNet", "Unet"]
 
 
-@export("monai.networks.nets")
-@alias("Unet")
+#@export("monai.networks.nets")
+#@alias("Unet")
 class UNet(nn.Module):
     """
     Enhanced version of UNet which has residual units implemented with the ResidualUnit class.

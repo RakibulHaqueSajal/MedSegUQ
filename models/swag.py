@@ -52,7 +52,7 @@ class Model(nn.Module):
         # first moment
         self.mean.mul_(self.n_models.item() / (self.n_models.item() + 1.0))
         self.mean.add_(w / (self.n_models.item() + 1.0))
-        print(self.mean.shape)
+      #  print(self.mean.shape)
 
         # second moment
         self.sq_mean.mul_(self.n_models.item() / (self.n_models.item() + 1.0))
