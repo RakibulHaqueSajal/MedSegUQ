@@ -36,6 +36,15 @@ If `-s True` is used, the predicted segmentations and uncertainty maps will be w
 
 When `test_base.py` and `test.py` are called, the results are printed and written to a `.json` file. Visualization of slices is also saved. 
 
+
+## Environment 
+
+```
+conda env create -f uncertainty.yml
+
+```
+
+
 ## References
 
 Code is based on and uses the [MONAI](https://monai.io/) toolkit:
